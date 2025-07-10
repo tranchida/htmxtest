@@ -8,6 +8,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
 	"htmxtest/internal/templates"
+	"htmxtest/internal/services"
 )
 
 //go:embed static
@@ -20,6 +21,7 @@ func main() {
 	e.GET("/", pageHandler)
 	e.GET("/about", pageHandler)
 	e.GET("/admin", pageHandler)
+	e.GET("/randommessage", randomMessageHandler)
 
 	if err := e.Start(":8080"); err != nil {
 		log.Fatal("ListenAndServe: ", err)
@@ -63,5 +65,12 @@ func Render(ctx echo.Context, statusCode int, t templ.Component) error {
 
 	return ctx.HTML(statusCode, buf.String())
 }
+
+func randomMessageHandler(c echo.Context) error {
+	message := services.GetRandomMessage()
+	return Render(c, http.StatusOK, templates.Message(message))
+}
+
+
 
 
