@@ -1,10 +1,22 @@
-# Application Go avec HTMX
+# Application Web HTMX avec Go
 
-Ce projet est une application web simple utilisant Go comme backend et HTMX pour les interactions côté client.
+Une application web moderne utilisant HTMX pour des interfaces dynamiques et Go (avec le framework Echo) pour le backend.
+
+## Fonctionnalités
+
+- 🚀 **Routing** avec Echo
+- 🎨 **Templating** avec le package `templ`
+- ⚡ **HTMX** pour des mises à jour partielles sans JavaScript
+- 🏗️ **Architecture modulaire** avec séparation claire des templates
+- 🎯 **Pages disponibles** :
+  - Page d'accueil (`/`)
+  - Page À propos (`/about`)
+  - Page d'administration (`/admin`)
 
 ## Prérequis
 
-- Go 1.16 ou supérieur
+- Go 1.20 ou supérieur
+- Un navigateur web moderne
 
 ## Installation
 
@@ -14,30 +26,54 @@ Ce projet est une application web simple utilisant Go comme backend et HTMX pour
    cd htmxtest
    ```
 
-2. Lancer l'application :
+2. Installer les dépendances :
    ```bash
-   go run main.go
+   go mod download
    ```
 
-3. Ouvrir un navigateur à l'adresse : http://localhost:8080
+## Lancement
+
+```bash
+go run main.go
+```
+
+L'application sera disponible à l'adresse : [http://localhost:8080](http://localhost:8080)
 
 ## Structure du projet
 
-- `main.go` : Point d'entrée de l'application
-- `templates/` : Contient les templates HTML
-  - `layout.html` : Template de base
-  - `home.html` : Page d'accueil
-  - `about.html` : Page À propos
-  - `admin.html` : Page d'administration
-- `static/` : Fichiers statiques (CSS, JS, images)
+```
+.
+├── go.mod           # Dépendances Go
+├── main.go          # Point d'entrée de l'application
+├── static/          # Fichiers statiques (CSS, JS, images)
+└── internal/
+    └── templates/   # Templates HTML avec templ
+        ├── home.templ
+        ├── about.templ
+        ├── admin.templ
+        ├── layout.templ
+        └── title.templ
+```
 
-## Fonctionnalités
+## Développement
 
-- Navigation fluide avec HTMX
-- Chargement dynamique du contenu
-- Interface utilisateur moderne avec Pico CSS
+### Rechargement automatique
 
-## Dépendances
+Pour un développement plus fluide, vous pouvez utiliser [air](https://github.com/cosmtrek/air) pour le rechargement automatique :
 
-- HTMX : Pour les interactions côté client
-- Pico CSS : Pour le style minimaliste
+```bash
+go install github.com/cosmtrek/air@latest
+air
+```
+
+### Génération des templates
+
+Après avoir modifié un fichier `.templ`, exécutez :
+
+```bash
+templ generate
+```
+
+## Licence
+
+MIT
