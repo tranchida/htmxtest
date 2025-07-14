@@ -23,6 +23,14 @@ func main() {
 	e.GET("/admin", pageHandler)
 	e.GET("/randommessage", randomMessageHandler)
 
+	e.HTTPErrorHandler = func (err error, c echo.Context) {
+		if he, ok := err.(*echo.HTTPError); ok && he.Code == http.StatusNotFound {
+			c.Redirect(http.StatusFound, "/")
+			return
+		}
+		c.Logger().Error(err)
+	}
+
 	if err := e.Start(":8080"); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
@@ -43,7 +51,7 @@ func pageHandler(c echo.Context) error {
 	case "/admin":
 		template = templates.Admin()
 	default:
-		return c.NoContent(http.StatusNotFound)
+		template = templates.Home()
 	}
 
 	if c.Request().Header.Get("HX-Request") == "true" {
