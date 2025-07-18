@@ -2,47 +2,50 @@ package main
 
 import (
 	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 
-	"github.com/a-h/templ"
-	"github.com/labstack/echo/v4"
-	"htmxtest/internal/templates"
 	"htmxtest/internal/services"
+	"htmxtest/internal/templates"
+
+	"github.com/a-h/templ"
+	"github.com/gin-gonic/gin"
 )
 
 //go:embed static
 var staticFiles embed.FS
 
 func main() {
+	r := gin.Default()
 
-	e := echo.New()
-	e.StaticFS("/static", echo.MustSubFS(staticFiles, "static"))
-	e.GET("/", pageHandler)
-	e.GET("/about", pageHandler)
-	e.GET("/admin", pageHandler)
-	e.GET("/randommessage", randomMessageHandler)
-
-	e.HTTPErrorHandler = func (err error, c echo.Context) {
-		if he, ok := err.(*echo.HTTPError); ok && he.Code == http.StatusNotFound {
-			c.Redirect(http.StatusFound, "/")
-			return
-		}
-		c.Logger().Error(err)
+	// Servir les fichiers statiques embarqués correctement
+	staticFS, err := fs.Sub(staticFiles, "static")
+	if err != nil {
+		log.Fatal(err)
 	}
+	r.StaticFS("/static", http.FS(staticFS))
 
-	if err := e.Start(":8080"); err != nil {
+	r.GET("/", pageHandler)
+	r.GET("/about", pageHandler)
+	r.GET("/admin", pageHandler)
+	r.GET("/randommessage", randomMessageHandler)
+
+	// Gestion du 404 : redirige vers la page d'accueil
+	r.NoRoute(func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "/")
+	})
+
+	if err := r.Run(":8080"); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
 
-// pageHandler serves the full HTML page (layout + content) or just the content for HTMX requests.
-// It determines which content to show based on the URL path.
-func pageHandler(c echo.Context) error {
-
+// pageHandler sert la page HTML complète ou juste le contenu pour les requêtes HTMX.
+func pageHandler(c *gin.Context) {
 	var template templ.Component
 
-	path := c.Request().URL.Path
+	path := c.Request.URL.Path
 	switch path {
 	case "/":
 		template = templates.Home()
@@ -54,31 +57,26 @@ func pageHandler(c echo.Context) error {
 		template = templates.Home()
 	}
 
-	if c.Request().Header.Get("HX-Request") == "true" {
-		return Render(c, http.StatusOK, template)
+	if c.GetHeader("HX-Request") == "true" {
+		Render(c, http.StatusOK, template)
 	} else {
-		// For full page loads, render the full layout
-		return Render(c, http.StatusOK, templates.Layout(template))
+		Render(c, http.StatusOK, templates.Layout(template))
 	}
 }
-			
 
-func Render(ctx echo.Context, statusCode int, t templ.Component) error {
+func Render(ctx *gin.Context, statusCode int, t templ.Component) {
 	buf := templ.GetBuffer()
 	defer templ.ReleaseBuffer(buf)
 
-	if err := t.Render(ctx.Request().Context(), buf); err != nil {
-		return err
+	if err := t.Render(ctx.Request.Context(), buf); err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
 	}
 
-	return ctx.HTML(statusCode, buf.String())
+	ctx.Data(statusCode, "text/html; charset=utf-8", buf.Bytes())
 }
 
-func randomMessageHandler(c echo.Context) error {
+func randomMessageHandler(c *gin.Context) {
 	message := services.GetRandomMessage()
-	return Render(c, http.StatusOK, templates.Message(message))
+	Render(c, http.StatusOK, templates.Message(message))
 }
-
-
-
-
