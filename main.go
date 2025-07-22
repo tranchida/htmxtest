@@ -10,42 +10,35 @@ import (
 	"htmxtest/internal/templates"
 
 	"github.com/a-h/templ"
-	"github.com/gin-gonic/gin"
 )
 
 //go:embed static
 var staticFiles embed.FS
 
 func main() {
-	r := gin.Default()
 
 	// Servir les fichiers statiques embarqués correctement
 	staticFS, err := fs.Sub(staticFiles, "static")
 	if err != nil {
 		log.Fatal(err)
 	}
-	r.StaticFS("/static", http.FS(staticFS))
+    http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
-	r.GET("/", pageHandler)
-	r.GET("/about", pageHandler)
-	r.GET("/admin", pageHandler)
-	r.GET("/randommessage", randomMessageHandler)
+    http.HandleFunc("/", pageHandler)
 
-	// Gestion du 404 : redirige vers la page d'accueil
-	r.NoRoute(func(c *gin.Context) {
-		c.Redirect(http.StatusFound, "/")
-	})
+    http.HandleFunc("/randommessage", randomMessageHandler)
 
-	if err := r.Run(":8080"); err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
+    log.Println("Server started on :8080")
+    if err := http.ListenAndServe(":8080", nil); err != nil {
+        log.Fatal("ListenAndServe: ", err)
+    }
 }
 
 // pageHandler sert la page HTML complète ou juste le contenu pour les requêtes HTMX.
-func pageHandler(c *gin.Context) {
+func pageHandler(w http.ResponseWriter, r *http.Request) {
 	var template templ.Component
 
-	path := c.Request.URL.Path
+    path := r.URL.Path
 	switch path {
 	case "/":
 		template = templates.Home()
@@ -54,29 +47,18 @@ func pageHandler(c *gin.Context) {
 	case "/admin":
 		template = templates.Admin()
 	default:
-		template = templates.Home()
-	}
-
-	if c.GetHeader("HX-Request") == "true" {
-		Render(c, http.StatusOK, template)
-	} else {
-		Render(c, http.StatusOK, templates.Layout(template))
-	}
-}
-
-func Render(ctx *gin.Context, statusCode int, t templ.Component) {
-	buf := templ.GetBuffer()
-	defer templ.ReleaseBuffer(buf)
-
-	if err := t.Render(ctx.Request.Context(), buf); err != nil {
-		ctx.String(http.StatusInternalServerError, err.Error())
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
-	ctx.Data(statusCode, "text/html; charset=utf-8", buf.Bytes())
+    if r.Header.Get("HX-Request") == "true" {
+		template.Render(r.Context(), w)
+    } else {
+        templates.Layout(template).Render(r.Context(), w)
+    }
 }
 
-func randomMessageHandler(c *gin.Context) {
+func randomMessageHandler(w http.ResponseWriter, r *http.Request) {
 	message := services.GetRandomMessage()
-	Render(c, http.StatusOK, templates.Message(message))
+	templates.Message(message).Render(r.Context(), w)
 }
