@@ -2,63 +2,85 @@ package main
 
 import (
 	"embed"
+	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 
 	"htmxtest/internal/services"
-	"htmxtest/internal/templates"
-
-	"github.com/a-h/templ"
 )
 
-//go:embed static
+//go:embed static templates
 var staticFiles embed.FS
+
+var templs *template.Template
 
 func main() {
 
-	// Servir les fichiers statiques embarqués correctement
+	mux := http.NewServeMux()
+
+	templsParsed, err := template.ParseFS(staticFiles, "templates/*.go.tmpl")
+	if err != nil {
+		log.Fatal(err)
+	}
+	templs = templsParsed
+
 	staticFS, err := fs.Sub(staticFiles, "static")
 	if err != nil {
 		log.Fatal(err)
 	}
-    http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
-    http.HandleFunc("/", pageHandler)
+	mux.HandleFunc("/", pageHandler)
 
-    http.HandleFunc("/randommessage", randomMessageHandler)
+	mux.HandleFunc("/randommessage", randomMessageHandler)
 
-    log.Println("Server started on :8080")
-    if err := http.ListenAndServe(":8080", nil); err != nil {
-        log.Fatal("ListenAndServe: ", err)
-    }
+	log.Println("Server started on :8080")
+	if err := http.ListenAndServe(":8080", LoggingMiddleware(mux)); err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }
 
 // pageHandler sert la page HTML complète ou juste le contenu pour les requêtes HTMX.
 func pageHandler(w http.ResponseWriter, r *http.Request) {
-	var template templ.Component
 
-    path := r.URL.Path
+	var template string
+	path := r.URL.Path
 	switch path {
 	case "/":
-		template = templates.Home()
+		template = "home"
 	case "/about":
-		template = templates.About()
+		template = "about"
 	case "/admin":
-		template = templates.Admin()
+		template = "admin"
 	default:
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
-    if r.Header.Get("HX-Request") == "true" {
-		template.Render(r.Context(), w)
-    } else {
-        templates.Layout(template).Render(r.Context(), w)
-    }
+	if r.Header.Get("HX-Request") == "true" {
+		render(w, template, nil)
+	} else {
+		render(w, "layout", nil)
+	}
 }
 
 func randomMessageHandler(w http.ResponseWriter, r *http.Request) {
 	message := services.GetRandomMessage()
-	templates.Message(message).Render(r.Context(), w)
+	render(w, "message", message)
+}
+
+func render(w http.ResponseWriter, tmpl string, data interface{}) {
+	err := templs.ExecuteTemplate(w, tmpl + ".go.tmpl", data)
+	if err != nil {
+		http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func LoggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        log.Printf("%s %s\n", r.Method, r.URL.Path)
+        next.ServeHTTP(w, r)
+    })
 }

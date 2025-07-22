@@ -1,9 +1,0 @@
-package templates
-
-import "htmxtest/internal/services"
-
-templ Message(message services.Message) {
-    <span> 
-            {message.Id} {message.Message}
-    </span>
-}
