@@ -1,6 +1,10 @@
+
 package services
 
-import "math/rand"
+import (
+	"math/rand"
+	"context"
+)
 
 type Message struct {
 	Id      int    `json:"id"`
@@ -118,8 +122,9 @@ var messages = []string{
 	"Soyez innovant.",
 }
 
-func GetRandomMessage() Message {
+func GetRandomMessage(ctx context.Context) Message {
 
+	// Exemple d'utilisation du contexte (ici, non utilisé, mais prêt pour une base de données ou une annulation)
 	id := rand.Intn(len(messages))
 	return Message{
 		Id:      id,
