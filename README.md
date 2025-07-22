@@ -1,11 +1,11 @@
 # HTMX Test - Application Web avec Go
 
-Application web moderne utilisant HTMX pour des interfaces dynamiques, Go avec le framework Echo pour le backend, et un générateur de messages aléatoires en français.
+Application web moderne utilisant HTMX pour des interfaces dynamiques, Go (net/http, html/template) pour le backend, et un générateur de messages aléatoires en français.
 
 ## Fonctionnalités
 
-- 🚀 **Serveur web** avec Echo Framework
-- 🎨 **Templates** avec le package `templ` 
+- 🚀 **Serveur web** natif Go (net/http)
+- 🎨 **Templates** avec le package `html/template`
 - ⚡ **HTMX** pour des mises à jour partielles sans JavaScript
 - 🎲 **Générateur de messages** français aléatoires (119 messages disponibles)
 - 🏗️ **Architecture modulaire** avec séparation claire des composants
@@ -54,65 +54,49 @@ L'application sera disponible à l'adresse : [http://localhost:8080](http://loca
 .
 ├── go.mod                    # Dépendances Go
 ├── go.sum                    # Checksums des dépendances
-├── main.go                   # Point d'entrée avec serveur Echo
-├── rundev.sh                 # Script de développement
+├── main.go                   # Point d'entrée avec serveur HTTP natif
 ├── check.http                # Tests HTTP
 ├── static/                   # Fichiers statiques intégrés
 │   ├── htmx.min.js          # Bibliothèque HTMX
 │   └── pico.zinc.min.css    # Framework CSS Pico
 ├── internal/
-│   ├── services/            # Services métier
-│   │   └── messages.go      # Générateur de messages français
-│   └── templates/           # Templates templ
-│       ├── about.templ      # Page à propos
-│       ├── admin.templ      # Page admin  
-│       ├── home.templ       # Page d'accueil
-│       ├── layout.templ     # Layout principal
-│       ├── message.templ    # Template pour messages
-│       ├── title.templ      # Composant titre
-│       └── *_templ.go       # Fichiers générés par templ
+│   └── services/            # Services métier
+│       └── messages.go      # Générateur de messages français
+├── templates/               # Templates HTML
+│   ├── about.go.tmpl        # Page à propos
+│   ├── admin.go.tmpl        # Page admin  
+│   ├── home.go.tmpl         # Page d'accueil
+│   ├── layout.go.tmpl       # Layout principal
+│   ├── message.go.tmpl      # Template pour messages
+│   ├── title.go.tmpl        # Composant titre
 ├── bin/                     # Binaires compilés
 └── tmp/                     # Fichiers temporaires
 ```
 
-## Développement
 
-### Script de développement
 
-Un script `rundev.sh` est fourni pour faciliter le développement. Il s'occupe de :
-- Générer automatiquement les templates
-- Démarrer le serveur avec rechargement automatique
-- Fournir un environnement de développement optimisé
 
-Pour l'utiliser :
-
-1. Rendez le script exécutable (si ce n'est pas déjà fait) :
-   ```bash
-   chmod +x rundev.sh
-   ```
-
-2. Lancez le script :
-   ```bash
-   ./rundev.sh
-   ```
-
-Le serveur de développement sera accessible à l'adresse : [http://localhost:8080](http://localhost:8080)
-
-### Génération manuelle des templates
-
-Si nécessaire, vous pouvez générer manuellement les templates avec :
-
-```bash
-go tool templ generate
-```
 
 ### Architecture
 
-- **Echo Framework** : Serveur HTTP rapide et léger
-- **Templ** : Génération de templates HTML type-safe
+- **Serveur HTTP natif** : net/http pour la gestion des routes et des requêtes
+- **html/template** : Génération de templates HTML sécurisés
 - **HTMX** : Interactions dynamiques côté client
 - **Embedded Static Files** : Fichiers statiques intégrés au binaire
 - **Service Layer** : Séparation de la logique métier (messages)
+## Logging
+
+Le serveur journalise chaque requête HTTP au format Apache combined log :
+
+```
+IP - - [date] "METHOD PATH PROTO" status bytes "Referer" "User-Agent" duration
+```
+
+Exemple :
+
+```
+127.0.0.1 - - [22/Jul/2025:14:32:10 +0200] "GET /about HTTP/1.1" 200 512 "http://localhost:8080/" "Mozilla/5.0 ..." 2.3ms
+```
 
 ## Licence
 
