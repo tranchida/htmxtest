@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"htmxtest/internal/services"
@@ -36,8 +37,12 @@ func main() {
 
 	mux.HandleFunc("/randommessage", randomMessageHandler)
 
-	log.Println("Server started on :8080")
-	if err := http.ListenAndServe(":8080", LoggingMiddleware(mux)); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("Starting server on port %s", port)
+	if err := http.ListenAndServe(":"+port, LoggingMiddleware(mux)); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
