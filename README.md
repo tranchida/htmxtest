@@ -1,4 +1,4 @@
-# HTMX Test - Application Web avec Go 1.24.5
+# HTMX Test - Application Web avec Go 1.24
 
 Application web moderne utilisant HTMX pour des interfaces dynamiques, Go (net/http, html/template) pour le backend, et un générateur de messages aléatoires en français.
 
