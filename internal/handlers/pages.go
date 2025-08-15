@@ -45,7 +45,7 @@ func handleError(w http.ResponseWriter, err error, msg string, code int) {
 }
 
 func Render(w http.ResponseWriter, tmpl string, data any) {
-	err := Templs.ExecuteTemplate(w, tmpl+".go.tmpl", data)
+	err := Templs.ExecuteTemplate(w, tmpl+".gohtml", data)
 	if err != nil {
 		handleError(w, err, "Error executing template", http.StatusInternalServerError)
 		return

@@ -22,7 +22,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	templsParsed, err := template.ParseFS(staticFiles, "templates/*.go.tmpl")
+	templsParsed, err := template.ParseFS(staticFiles, "templates/*.gohtml")
 	if err != nil {
 		log.Fatal(err)
 	}

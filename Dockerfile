@@ -19,8 +19,6 @@ WORKDIR /root/
 
 # Copie le binaire compilé et les fichiers nécessaires
 COPY --from=builder /htmxtest ./htmxtest
-COPY static ./static
-COPY internal/templates ./internal/templates
 
 # Expose le port utilisé par l'application (à adapter si besoin)
 EXPOSE 8080
