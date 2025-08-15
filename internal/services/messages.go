@@ -1,9 +1,8 @@
-
 package services
 
 import (
-	"math/rand"
 	"context"
+	"math/rand"
 )
 
 type Message struct {
@@ -144,4 +143,22 @@ func GetAllMessages() []Message {
 	return ms
 }
 
+func GetMessageByID(id int) (Message, bool) {
+	if id < 0 || id >= len(messages) {
+		return Message{}, false
+	}
+	return Message{
+		Id:      id,
+		Message: messages[id],
+	}, true
+}
 
+func GetMessagesByIDs(ids []int) []Message {
+	var ms []Message
+	for _, id := range ids {
+		if msg, ok := GetMessageByID(id); ok {
+			ms = append(ms, msg)
+		}
+	}
+	return ms
+}
