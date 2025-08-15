@@ -54,23 +54,29 @@ L'application sera disponible à l'adresse : [http://localhost:8080](http://loca
 .
 ├── go.mod                    # Dépendances Go
 ├── go.sum                    # Checksums des dépendances
-├── main.go                   # Point d'entrée avec serveur HTTP natif
-├── check.http                # Tests HTTP
-├── static/                   # Fichiers statiques intégrés
-│   ├── htmx.min.js          # Bibliothèque HTMX
-│   └── pico.zinc.min.css    # Framework CSS Pico
-├── internal/
-│   └── services/            # Services métier
-│       └── messages.go      # Générateur de messages français
-├── templates/               # Templates HTML
-│   ├── about.go.tmpl        # Page à propos
-│   ├── admin.go.tmpl        # Page admin  
-│   ├── home.go.tmpl         # Page d'accueil
-│   ├── layout.go.tmpl       # Layout principal
-│   ├── message.go.tmpl      # Template pour messages
-│   ├── title.go.tmpl        # Composant titre
-├── bin/                     # Binaires compilés
-└── tmp/                     # Fichiers temporaires
+├── main.go                   # Point d'entrée de l'application
+├── Dockerfile                # Fichier pour la conteneurisation Docker
+├── check.http                # Fichier pour les tests HTTP
+├── static/                   # Fichiers statiques
+│   ├── htmx.min.js           # Bibliothèque HTMX
+│   └── pico.zinc.min.css     # Framework CSS Pico
+├── internal/                 # Code interne de l'application
+│   ├── handlers/             # Gestionnaires de requêtes HTTP
+│   │   └── pages.go
+│   ├── middleware/           # Middlewares HTTP
+│   │   └── logging.go
+│   ├── router/               # Configuration des routes
+│   │   └── router.go
+│   └── services/             # Logique métier
+│       └── messages.go       # Générateur de messages
+├── templates/                # Modèles de templates HTML
+│   ├── about.go.tmpl         # Page "À propos"
+│   ├── admin.go.tmpl         # Page "Administration"
+│   ├── home.go.tmpl          # Page d'accueil
+│   ├── layout.go.tmpl        # Layout de base
+│   ├── message.go.tmpl       # Template pour les messages
+│   └── title.go.tmpl         # Template pour le titre
+└── tmp/                      # Fichiers temporaires
 ```
 
 
