@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type loggingResponseWriter struct {
@@ -23,17 +24,15 @@ func (lrw *loggingResponseWriter) Write(b []byte) (int, error) {
 	return n, err
 }
 
-func LoggingMiddleware(next http.Handler) http.Handler {
+func LoggingMiddleware(next http.Handler, logger zerolog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		ip := r.RemoteAddr
 		lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: 200}
 		next.ServeHTTP(lrw, r)
 		duration := time.Since(start)
-		t := time.Now().Format("02/Jan/2006:15:04:05 -0700")
-		log.Printf("%s - - [%s] \"%s %s %s\" %d %d %v",
+		logger.Info().Msgf("%s %s %s %s %d %d %v",
 			ip,
-			t,
 			r.Method,
 			r.URL.RequestURI(),
 			r.Proto,
