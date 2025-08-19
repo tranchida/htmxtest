@@ -1,15 +1,13 @@
 package handlers
 
 import (
-	"bytes"
 	"html/template"
 	"log"
-	"math/rand"
 	"net/http"
 
 	"htmxtest/internal/services"
 
-	"github.com/wcharczuk/go-chart/v2"
+	"github.com/go-analyze/charts"
 )
 
 var Templs *template.Template
@@ -44,26 +42,42 @@ func RandomMessageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Graph(w http.ResponseWriter, r *http.Request) {
-	graph := chart.BarChart{
-		Title: "Exemple de graphique",
-		Bars: []chart.Value{
-			{Value: rand.Float64(), Label: "A"},
-			{Value: rand.Float64(), Label: "B"},
-			{Value: rand.Float64(), Label: "C"},
+
+	values := [][]float64{
+		{2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3},
+		{2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3},
+	}
+
+	opt := charts.NewBarChartOptionWithData(values)
+	opt.Title.Text = "Bar Chart"
+	opt.XAxis.Labels = []string{
+		"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+	}
+	opt.Legend = charts.LegendOption{
+		SeriesNames: []string{
+			"Rainfall", "Evaporation",
 		},
+		Offset:       charts.OffsetRight,
+		OverlayChart: charts.Ptr(true),
 	}
 
-	// Buffer pour l'image
-	buffer := bytes.NewBuffer([]byte{})
-	err := graph.Render(chart.PNG, buffer)
+	p := charts.NewPainter(charts.PainterOptions{
+		OutputFormat: charts.ChartOutputSVG,
+	})
+
+	err := p.BarChart(opt)
 	if err != nil {
-		http.Error(w, "Erreur lors de la génération du graphique", http.StatusInternalServerError)
-		return
+		panic(err)
 	}
 
-	// Définir le type de contenu et envoyer l'image
-	w.Header().Set("Content-Type", "image/png")
-	w.Write(buffer.Bytes())
+	w.Header().Set("Content-Type", "image/svg+xml")
+	buf, err := p.Bytes()
+	if err != nil {
+		panic(err)
+	}
+
+	w.Write(buf)
+
 }
 
 func handleError(w http.ResponseWriter, err error, msg string, code int) {
@@ -77,10 +91,4 @@ func Render(w http.ResponseWriter, tmpl string, data any) {
 		handleError(w, err, "Error executing template", http.StatusInternalServerError)
 		return
 	}
-}
-
-func ShowGraph(w http.ResponseWriter, r *http.Request) {
-
-	randomval := rand.Intn(100)
-	Render(w, "graph", randomval)
 }

@@ -26,6 +26,5 @@ func setupPageRoutes(mux *http.ServeMux) {
 
 func setupAPIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/randommessage", handlers.RandomMessageHandler)
-	mux.HandleFunc("/showgraph", handlers.ShowGraph)
 	mux.HandleFunc("/graph", handlers.Graph)
 }
